@@ -17,6 +17,8 @@
 │   ├── xgo_web_control.py  # 网页点动与地面行走（:18107，仅回环）
 │   ├── xgo_web_control.html
 │   ├── bench_drive.py      # 走 JSON 接口的短点动复现脚本
+│   ├── drive.py            # 终端键盘遥控，连狗上的 --serve-cmd
+│   ├── mac_runner.py       # Mac 侧跑策略，经 dog_bridge 下发
 │   └── models/             # 部署用 ONNX
 ├── tools/                  # 实机观测/动作限位画像
 ├── docs/                   # 训练与部署全流程指南
@@ -64,6 +66,8 @@ python3 -u onnx_runner.py --dry --seconds 5      # 只读推理，不下发
 python3 -u onnx_runner.py --probe 31 3           # 单舵机点动 ±5° 内
 python3 -u onnx_runner.py --run                  # 闭环行走，指令走 /cmd
 ```
+
+另外两个遥控入口：`deploy/drive.py` 在终端里用键盘驱动狗端 `onnx_runner.py --run --serve-cmd 8100`；`deploy/mac_runner.py` 把推理放在 Mac 上，经 `dog_bridge.py` 的 `/step` 一次往返写读，适合 WiFi 延迟可控的场景。
 
 网页控制（默认桌面/悬空模式）：
 
