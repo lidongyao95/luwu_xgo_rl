@@ -1,0 +1,83 @@
+{
+  "servo_id": 31,
+  "initial_attitude_deg": [
+    1.55,
+    -0.78
+  ],
+  "initial_raw": 121,
+  "initial_deg": -11.31,
+  "other_joint_max_raw_delta": 0,
+  "trace": [
+    {
+      "phase": "A",
+      "command_raw": 126,
+      "command_deg": -8.76,
+      "read_raw": [
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121,
+        121
+      ],
+      "settled_raw": 121,
+      "settled_deg": -11.31
+    },
+    {
+      "phase": "B",
+      "command_raw": 131,
+      "command_deg": -6.22,
+      "read_raw": [
+        121,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122
+      ],
+      "settled_raw": 122,
+      "settled_deg": -10.8
+    },
+    {
+      "phase": "A_repeat",
+      "command_raw": 126,
+      "command_deg": -8.76,
+      "read_raw": [
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122,
+        122
+      ],
+      "settled_raw": 122,
+      "settled_deg": -10.8
+    }
+  ],
+  "final_raw": 122,
+  "final_deg": -10.8
+}

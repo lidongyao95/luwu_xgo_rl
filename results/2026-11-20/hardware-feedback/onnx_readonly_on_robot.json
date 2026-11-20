@@ -1,0 +1,25 @@
+{
+    "firmware": "M-7.0.0b8",
+    "onnxruntime": "1.26.0",
+    "onnx_file": "mini2s_hardware_feedback.onnx",
+    "frames": 80,
+    "actuator_commands": 0,
+    "input_dim": 56,
+    "output_dim": 15,
+    "max_abs_action": 0.7315007448196411,
+    "read_plus_inference": {
+        "median_ms": 17.22,
+        "p95_ms": 19.2,
+        "max_ms": 21.34
+    },
+    "inference": {
+        "median_ms": 0.19,
+        "p95_ms": 0.27,
+        "max_ms": 0.48
+    },
+    "read_only_period": {
+        "median_ms": 25.1,
+        "p95_ms": 25.12,
+        "max_ms": 25.26
+    }
+}

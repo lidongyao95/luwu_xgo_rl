@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XGO Mini2S 遥控</title>
+<style>
+  :root {color-scheme:dark;--bg:#101813;--panel:#1a2920;--line:#334b3b;--fg:#edf5ee;--muted:#a9bdb0;--green:#b8f6cb;--stop:#ff897a}
+  * {box-sizing:border-box}
+  body {margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
+  main {max-width:820px;margin:auto;padding:clamp(22px,6vw,68px) 20px}
+  header {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:34px}
+  h1 {font-size:clamp(31px,6.5vw,58px);letter-spacing:-.08em;line-height:1;margin:0 0 12px}
+  p {color:var(--muted);font-size:14px;line-height:1.55;margin:0}
+  #status {border:1px solid var(--line);border-radius:40px;padding:8px 14px;font-size:14px;white-space:nowrap}
+  #status[data-state=moving] {background:var(--green);color:#152c1f;border-color:transparent}
+  #status[data-state=fault], #status[data-state=offline] {border-color:var(--stop);color:var(--stop)}
+  .layout {display:grid;grid-template-columns:1fr minmax(184px,1fr);gap:16px}
+  .pad,.side {background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px}
+  .keys {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;touch-action:none}
+  button {font:inherit;color:inherit;cursor:pointer;user-select:none;-webkit-user-select:none}
+  button:focus-visible {outline:2px solid var(--green);outline-offset:3px}
+  .key {border:1px solid #466551;border-radius:13px;background:#263c2e;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;padding:8px 3px;min-height:70px;line-height:1.15;touch-action:none}
+  .key span {font-size:26px;line-height:1.15;color:var(--green)}
+  .key strong {font-size:13px;white-space:nowrap}
+  .key:hover {background:#304d3a}
+  .key.active {background:var(--green);color:#142b1d;border-color:transparent}
+  .key.active span {color:#142b1d}
+  .speeds {display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  .speeds-label {font-size:13px;color:var(--muted);margin-right:2px;white-space:nowrap}
+  .speed {flex:1;min-width:54px;padding:8px 4px;border-radius:10px;border:1px solid #466551;
+    background:#22362a;font-size:13px;font-variant-numeric:tabular-nums}
+  .speed[aria-pressed=true] {background:var(--green);color:#142b1d;border-color:transparent;font-weight:700}
+  .speed:disabled {opacity:.45;cursor:not-allowed}
+  .forward,.backward {grid-column:2}
+  .forward {grid-row:1}.left {grid-column:1;grid-row:2}.right {grid-column:3;grid-row:2}.backward {grid-row:3}
+  .pad p {text-align:center;margin-top:14px}
+  #stop {width:100%;padding:16px 8px;border-radius:12px;border:0;background:var(--stop);color:#321411;font-weight:750;font-size:17px}
+  #stop:hover {background:#ffab9f}
+  dl {margin:15px 0;padding:0}
+  dl div {display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:11px 0;gap:1ch}
+  dt {font-size:14px;color:var(--muted)}
+  dd {font:600 14px ui-monospace,monospace;margin:0;white-space:nowrap}
+  #feedback {min-height:38px;color:var(--green);margin-top:18px}
+  @media(max-width:570px) {.layout {grid-template-columns:1fr}.pad,.side {padding:16px}.pad .keys {max-width:370px;margin:auto}header {margin-bottom:24px}.key {min-height:62px}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>XGO Mini2S</h1><p>{{ '地面行走 · 实机反馈适配策略' if walk else '悬空遥控 · 实机反馈适配策略' }}</p></div>
+    <div id="status" data-state="offline" role="status">连接中</div>
+  </header>
+  <div class="layout">
+    <section class="pad" aria-label="方向控制">
+      <div class="keys">
+        <button class="key forward" data-dir="forward" aria-label="按住前进"><span>↑</span><strong>前进</strong></button>
+        <button class="key left" data-dir="left" aria-label="按住左转"><span>←</span><strong>左转</strong></button>
+        <button class="key right" data-dir="right" aria-label="按住右转"><span>→</span><strong>右转</strong></button>
+        <button class="key backward" data-dir="backward" aria-label="按住后退"><span>↓</span><strong>后退</strong></button>
+      </div>
+      <div class="speeds" role="group" aria-label="指令速度">
+        <span class="speeds-label">速度</span>
+        {% for item in speeds %}
+        <button class="speed" data-speed="{{ item }}" aria-pressed="{{ 'true' if item == 1.0 else 'false' }}"
+                aria-label="指令速度 {{ (item * 100)|round|int }}%">{{ (item * 100)|round|int }}%</button>
+        {% endfor %}
+      </div>
+      <p>按住按钮或键盘方向键 / WASD，松开即停止下发。数字键 1–4 切换速度档，下发中不可改档。</p>
+    </section>
+    <section class="side" aria-label="停止与实机状态">
+      <button id="stop">停止下发 <span aria-hidden="true">· Esc</span></button>
+      <dl>
+        <div><dt>指令速度</dt><dd id="command">—</dd></div>
+        <div><dt>速度档位</dt><dd id="gear">100%</dd></div>
+        <div><dt>最近机身倾角</dt><dd id="tilt">—</dd></div>
+        <div><dt>累计下发帧</dt><dd id="frames">—</dd></div>
+      </dl>
+      <p>100% 档前后指令 {{ '%.2f'|format(directions.forward[0]) }} m/s、转向 {{ '%.2f'|format(directions.left[2]) }} rad/s。单次最长 {{ hold_s }} 秒{% if walk %}，倾角超过 25° 立即停{% else %}，保持机身支撑、四脚离地{% endif %}。</p>
+    </section>
+  </div>
+  <p id="feedback" aria-live="polite"></p>
+</main>
+<script>
+const secret = {{ control_token|tojson }};
+const keys = {
+  ArrowUp:'forward', ArrowDown:'backward', ArrowLeft:'left', ArrowRight:'right',
+  w:'forward', s:'backward', a:'left', d:'right'
+};
+const vectors = {{ directions|tojson }};
+const speedButtons = [...document.querySelectorAll('.speed')];
+const formatCommand = ([vx, , wz], scale=1) => {
+  const value = (vx || wz) * scale;
+  return (value > 0 ? '+' : '−') + Math.abs(value).toFixed(2) + (vx ? ' m/s' : ' rad/s');
+};
+const feedback = document.querySelector('#feedback');
+let held = null;
+let available = false;
+let speed = 1.0;
+
+function setSpeed(value) {
+  if (held) { feedback.textContent = '下发中不能改档，松开后再选。'; return; }
+  speed = value;
+  for (const button of speedButtons) {
+    const chosen = Number(button.dataset.speed) === value;
+    button.setAttribute('aria-pressed', String(chosen));
+  }
+  document.querySelector('#gear').textContent = Math.round(value * 100) + '%';
+}
+
+for (const button of speedButtons) {
+  button.addEventListener('click', () => setSpeed(Number(button.dataset.speed)));
+}
+document.querySelector('#gear').textContent = '100%';
+
+async function request(path, body) {
+  const response = await fetch('/api/' + path, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-XGO-Control':secret},
+    cache:'no-store',keepalive:true,body:JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error(String(response.status));
+  return response.json();
+}
+
+function release(force=false, message='') {
+  const previous = held;
+  held = null;
+  for (const button of speedButtons) button.disabled = false;
+  if (previous) {
+    clearTimeout(previous.timer);
+    previous.button.classList.remove('active');
+  }
+  if (force || previous?.token) request('stop', {token:force ? null : previous.token}).catch(()=>{});
+  if (message) feedback.textContent = message;
+}
+
+async function pulse(item, activate) {
+  try {
+    if (held !== item) return;
+    await request('pulse', {token:item.token, activate});
+    if (held === item) item.timer = setTimeout(() => pulse(item, false), 85);
+  } catch (error) {
+    if (held === item) release(false, error.message === '409' ? '本次结束，松开后可重新按住。' : '连接异常，已停止下发。');
+  }
+}
+
+async function press(direction, source) {
+  if (held || !available) return;
+  const button = document.querySelector(`[data-dir="${direction}"]`);
+  const item = {button, source, token:null, timer:null};
+  held = item;
+  feedback.textContent = '';
+  button.classList.add('active');
+  for (const gear of speedButtons) gear.disabled = true;
+  try {
+    const started = await request('prepare', {direction, speed});
+    if (held !== item) {
+      request('stop', {token:started.token}).catch(()=>{});
+      return;
+    }
+    item.token = started.token;
+    await pulse(item, true);
+  } catch (error) {
+    if (held === item) release(false, error.message === '409' ? '控制忙，松开后重试。' : '遥控请求失败。');
+  }
+}
+
+for (const button of document.querySelectorAll('.key')) {
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || held) return;
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    press(button.dataset.dir, 'pointer:' + event.pointerId);
+  });
+  for (const type of ['pointerup','pointercancel','lostpointercapture']) {
+    button.addEventListener(type, event => {
+      if (held?.source === 'pointer:' + event.pointerId) release();
+    });
+  }
+}
+addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); release(true, '已请求停止。'); return; }
+  if (event.key >= '1' && event.key <= '4' && event.key.length === 1) {
+    const gear = speedButtons[Number(event.key) - 1];
+    if (gear) { event.preventDefault(); setSpeed(Number(gear.dataset.speed)); }
+    return;
+  }
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  if (keys[key]) {
+    event.preventDefault();
+    if (!event.repeat) press(keys[key], 'key:' + key);
+  }
+});
+addEventListener('keyup', event => {
+  const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  if (held?.source === 'key:' + key) release();
+});
+document.querySelector('#stop').addEventListener('click', () => release(true, '已请求停止。'));
+addEventListener('blur', () => release());
+addEventListener('pagehide', () => release());
+document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
+
+async function update() {
+  const label = document.querySelector('#status');
+  try {
+    const response = await fetch('/api/status', {cache:'no-store',signal:AbortSignal.timeout(900)});
+    if (!response.ok) throw new Error('offline');
+    const state = await response.json();
+    available = true;
+    label.dataset.state = state.state;
+    label.textContent = {idle:'待命',moving:'正在下发',fault:'已停止'}[state.state];
+    document.querySelector('#command').textContent = state.direction
+      ? formatCommand(vectors[state.direction], state.speed ?? 1) : '0';
+    document.querySelector('#tilt').textContent = state.tilt_deg === null ? '—' : Number(state.tilt_deg).toFixed(1) + '°';
+    document.querySelector('#frames').textContent = state.frames;
+    if (state.error) feedback.textContent = state.error;
+  } catch {
+    available = false;
+    label.dataset.state = 'offline';
+    label.textContent = '未连接';
+    release();
+  }
+  setTimeout(update, 280);
+}
+update();
+</script>
+</body>
+</html>
