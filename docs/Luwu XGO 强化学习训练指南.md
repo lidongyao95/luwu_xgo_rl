@@ -91,7 +91,7 @@ test -f "$RUN/model_899.pt" && test -f "$RUN/policy.onnx" &&
 
 本次训练控制周期为 `0.004 s × 5 = 0.020 s`（50 Hz），步态相位周期为 0.4 s。ONNX 输入 `obs[1,56]` 依次是机体角速度、投影重力、速度指令、相位、相对关节位置、关节速度和上一步动作。输入单位用 rad、rad/s 和 m/s，输入归一化在模型内。输出 `actions[1,15]`，目标角度为默认关节角加 `0.25 × action`。按 ONNX 元数据读取关节顺序和默认角度。 [Luwu 官方训练与部署教程](https://wiki.xgorobot.com/kb/the-xgo-series-robot/cmqcbagh700138ffsq1nqs63g?model=mini2s)
 
-Nav 目录中原有 ONNX 的 SHA-256 与 11 月 18 日 15:29 的模型一致。现有狗端脚本 `Nav/src/robot/gait/onnx_runner.py` 使用 40 Hz 名义周期，角速度以姿态差分和低通估计，只驱动 12 个腿部关节。向旧脚本的姿态处理逻辑输入 +179° → −179°，25 ms 后估计的 yaw 角速度为 −29.99 rad/s。将角差折返为 +2° 后，相同滤波条件得到 +0.168 rad/s。当天的硬件体检也记录了原始 IMU 包失效和 yaw 死区。部署验收还需核对实测控制周期、舵机关节映射与方向、角速度和机械臂姿态。本次执行范围为 4522 上的仿真和 ONNX 推理。 [机器狗硬件体检](../Nav/docs/reports/机器狗硬件体检-2026-11-20.md)
+Nav 目录中原有 ONNX 的 SHA-256 与 11 月 18 日 15:29 的模型一致。现有狗端脚本 `deploy/onnx_runner.py`（当时在 Nav 仓库的 `src/robot/gait/`） 使用 40 Hz 名义周期，角速度以姿态差分和低通估计，只驱动 12 个腿部关节。向旧脚本的姿态处理逻辑输入 +179° → −179°，25 ms 后估计的 yaw 角速度为 −29.99 rad/s。将角差折返为 +2° 后，相同滤波条件得到 +0.168 rad/s。当天的硬件体检也记录了原始 IMU 包失效和 yaw 死区。部署验收还需核对实测控制周期、舵机关节映射与方向、角速度和机械臂姿态。本次执行范围为 4522 上的仿真和 ONNX 推理。 [机器狗硬件体检](https://github.com/lidongyao95/luwu_xgo_nav/blob/main/docs/reports/%E6%9C%BA%E5%99%A8%E7%8B%97%E7%A1%AC%E4%BB%B6%E4%BD%93%E6%A3%80-2026-11-20.md)
 
 ## 6. 2026-11-20 验证记录
 
